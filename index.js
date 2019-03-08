@@ -8,119 +8,111 @@ const util = require("util");
 
 class mgCsvWriter {
 
-	constructor(options) {
-		this.options = options ? options : {};
-		this.options.outfile = this.options.outfile ? this.options.outfile : "/tmp/outfile.csv";
-		this.options.lineSep = this.options.lineSep ? this.options.lineSep : "\n";
-		this.options.delimiter = this.options.delimiter ? this.options.delimiter : ",";
-		this.options.header = this.options.header ? this.options.header : false;
-		this.options.deleteFile = this.options.deleteFile ? this.options.deleteFile : false;
+  constructor(options) {
+    this.options = options ? options : {};
+    this.options.outfile = this.options.outfile ? this.options.outfile : "/tmp/outfile.csv";
+    this.options.lineSep = this.options.lineSep ? this.options.lineSep : "\n";
+    this.options.delimiter = this.options.delimiter ? this.options.delimiter : ",";
+    this.options.header = this.options.header ? this.options.header : false;
+  }
 
-		this.csvWrite = util.promisify(fs.writeFile);
-	}
+  writeHeader() {
+    if (!this.options.header)
+      return;
 
-	async writeHeader() {
-		if ( this.options.deleteFile ){
-			const f = util.promisify(fs.unlink);
-			await f(this.options.outfile);
-		}
+    let str = "";
+    for (let col of this.options.columns) {
+      str += this._value(col.title);
+      str += this.options.delimiter;
+    }
 
-		if (!this.options.header)
-			return;
+    if (str.length > 0) {
+      str = str.substring(0, str.lastIndexOf(this.options.delimiter));
+    }
 
-		let str = "";
-		for (let col of this.options.columns) {
-			str += this._value(col.title);
-			str += this.options.delimiter;
-		}
+    this._write(str + this.options.lineSep);
+  }
 
-		if (str.length > 0) {
-			str = str.substring(0, str.lastIndexOf(this.options.delimiter));
-		}
+  write(data) {
+    data = !Array.isArray(data) ? [data] : data;
 
-		await this._write(str + this.options.lineSep);
-	}
+    for (let row of data) {
+      this._write(this.formatRow(row) + this.options.lineSep);
+    }
+  }
 
-	async _write(string) {
-		await this.csvWrite( this.options.outfile, string, {'flag':'a'} );
-	}
+  formatRow(row) {
+    let str = "";
 
-	async write(data) {
-		data = !Array.isArray(data) ? [data] : data;
+    for (let col of this.options.columns) {
+      if (typeof row[col.id] != "undefined") {
 
-		for (let row of data) {
-			await this._write(this.formatRow(row) + this.options.lineSep);
-		}
-	}
+        if (this._isFunction(col.fnFormat)) {
+          str += col.fnFormat(row[col.id], col.id, row);
+        } else if (col.dataType) {
+          if (col.dataType == "date") {
+            str += this._valueDate(row[col.id], col.dateMask);
+          } else if (col.dataType == "int") {
+            str += this._valueInt(row[col.id]);
+          } else {
+            str += this._value(row[col.id]); // unknown dataType; so just treat as normal
+          }
+        } else {
+          str += this._value(row[col.id]);
+        }
 
-	formatRow(row) {
-		let str = "";
+      } else if (typeof col.defaultValue != "undefined") {
+        str += this._value(col.defaultValue);
+      }
 
-		for (let col of this.options.columns) {
-			if (typeof row[col.id] != "undefined") {
+      str += this.options.delimiter;
+    }
 
-				if (this._isFunction(col.fnFormat)) {
-					str += col.fnFormat(row[col.id], col.id, row);
-				} else if (col.dataType) {
-					if (col.dataType == "date") {
-						str += this._valueDate(row[col.id], col.dateMask);
-					} else if (col.dataType == "int") {
-						str += this._valueInt(row[col.id]);
-					} else {
-						str += this._value(row[col.id]); // unknown dataType; so just treat as normal
-					}
-				} else {
-					str += this._value(row[col.id]);
-				}
+    if (str.length > 0) {
+      str = str.substring(0, str.lastIndexOf(this.options.delimiter));
+    }
+    return str;
+  }
 
-			} else if (typeof col.defaultValue != "undefined") {
-				str += this._value(col.defaultValue);
-			}
+  //---------------------------------------------------------------------
+  // Internal functions
 
-			str += this.options.delimiter;
-		}
+  _write(string) {
+    fs.appendFileSync(this.options.outfile, string);
+  }
 
-		if (str.length > 0) {
-			str = str.substring(0, str.lastIndexOf(this.options.delimiter));
-		}
-		return str;
-	}
+  _isFunction(functionToCheck) {
+    return functionToCheck && {}.toString.call(functionToCheck) === '[object Function]';
+  }
 
-	//---------------------------------------------------------------------
-	// Internal functions
+  _valueInt(value, dateMask) {
+    if (typeof value === "undefined" || value === null)
+      return "";
+    return value;
+  }
 
-	_isFunction(functionToCheck) {
-		return functionToCheck && {}.toString.call(functionToCheck) === '[object Function]';
-	}
+  _valueDate(value, dateMask) {
+    if (typeof value === "undefined" || value === null)
+      return "";
 
-	_valueInt(value, dateMask) {
-		if (typeof value === "undefined" || value === null)
-			return "";
-		return value;
-	}
+    if (Object.prototype.toString.call(value) !== '[object Date]')
+      return this._value(value);
 
-	_valueDate(value, dateMask) {
-		if (typeof value === "undefined" || value === null)
-			return "";
+    dateMask = (typeof dateMask === "undefined" || dateMask === null || dateMask === "") ? "isoDateTime" : dateMask;
+    return dateFormat(value, dateMask);
+  }
 
-		if (Object.prototype.toString.call(value) !== '[object Date]')
-			return this._value(value);
+  _value(value) {
+    if (typeof value === "undefined" || value === null)
+      return "";
 
-		dateMask = (typeof dateMask === "undefined" || dateMask === null || dateMask === "") ? "isoDateTime" : dateMask;
-		return dateFormat(value, dateMask);
-	}
+    const str = String(value);
+    return this._needsQuoted(str) ? `"${str.replace(/"/g, '""')}"` : str;
+  }
 
-	_value(value) {
-		if (typeof value === "undefined" || value === null)
-			return "";
-
-		const str = String(value);
-		return this._needsQuoted(str) ? `"${str.replace(/"/g, '""')}"` : str;
-	}
-
-	_needsQuoted(str) {
-		return str.includes(this.options.delimiter) || str.includes('\n') || str.includes('"');
-	}
+  _needsQuoted(str) {
+    return str.includes(this.options.delimiter) || str.includes('\n') || str.includes('"');
+  }
 }
 
 module.exports = mgCsvWriter;

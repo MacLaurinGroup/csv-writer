@@ -79,10 +79,10 @@ const csvOut = new mgCsvWriter({
   ]
 });
 
-await csv.writeHeader();
+csv.writeHeader();
 
-await csv.write(stockData);  // can be a single row; or an array of rows
-await csv.write(stockData2);  // multiple calls will add to the file
+csv.write(stockData);  // can be a single row; or an array of rows
+csv.write(stockData2);  // multiple calls will add to the file
 ```
 
 
