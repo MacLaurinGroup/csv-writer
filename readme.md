@@ -6,7 +6,6 @@ Features:
 
 * Optional CSV file write
 * Pagable results
-* Delete file prior to creation
 * async / await ready
 * Customizable delimiter
 * Customizable column control
@@ -53,7 +52,6 @@ const mgCsvWriter = require("mg-csv-writer");
 
 const csvOut = new mgCsvWriter({
   outfile: "/tmp/output.csv",
-  deleteFile : true,
   header: true,
   delimiter: ",",
   columns: [{

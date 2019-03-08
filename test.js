@@ -51,7 +51,8 @@ const main = async () => {
 		});
 
 		csv.writeHeader();
-		csv.write(stockData);
+    csv.write(stockData);
+    csv.write(stockData);
 
     // Now do something
     const stat = util.promisify(fs.stat);
