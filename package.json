@@ -1,0 +1,25 @@
+{
+  "name": "mg-csv-writer",
+  "private" : false,
+  "version": "0.0.1",
+  "homepage": "https://github.com/MacLaurinGroup/csv-writer",
+  "description": "Powerful, lean and flexible csv-writer for node",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MacLaurinGroup/csv-writer"
+  },
+  "keywords": [
+    "csv",
+    "node"
+  ],
+  "author": "MacLaurin Group",
+  "dependencies": {
+    "dateformat": "^3.0.3"
+  },
+  "url" : "https://maclaurin.group/",
+  "license": "Apache-2.0"
+}
