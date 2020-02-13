@@ -53,6 +53,8 @@ const mgCsvWriter = require("mg-csv-writer");
 const csvOut = new mgCsvWriter({
   outfile: "/tmp/output.csv",
   header: true,
+  quoted: false,
+  lineSep : "\n",
   delimiter: ",",
   columns: [{
       id: "Symbol",
@@ -86,4 +88,5 @@ csv.write(stockData2);  // multiple calls will add to the file
 
 ## Updates
 
+* 2020-02-13 Added quoted attribute
 * 2019-03-08 Initial Release

@@ -1,7 +1,7 @@
 "use strict;"
 
 const fs = require("fs");
-var dateFormat = require("dateformat");
+const dateFormat = require("dateformat");
 const util = require("util");
 
 //-------------------------------------------------------------
@@ -14,6 +14,7 @@ class mgCsvWriter {
     this.options.lineSep = this.options.lineSep ? this.options.lineSep : "\n";
     this.options.delimiter = this.options.delimiter ? this.options.delimiter : ",";
     this.options.header = this.options.header ? this.options.header : false;
+    this.options.quoted = this.options.quoted ? this.options.quoted : false;
   }
 
   writeHeader() {
@@ -36,7 +37,7 @@ class mgCsvWriter {
   write(data) {
     data = !Array.isArray(data) ? [data] : data;
 
-    for (let row of data) {
+    for (const row of data) {
       this._write(this.formatRow(row) + this.options.lineSep);
     }
   }
@@ -44,15 +45,15 @@ class mgCsvWriter {
   formatRow(row) {
     let str = "";
 
-    for (let col of this.options.columns) {
-      if (typeof row[col.id] != "undefined") {
+    for (const col of this.options.columns) {
+      if (typeof row[col.id] !== "undefined") {
 
         if (this._isFunction(col.fnFormat)) {
           str += col.fnFormat(row[col.id], col.id, row);
         } else if (col.dataType) {
-          if (col.dataType == "date") {
+          if (col.dataType === "date") {
             str += this._valueDate(row[col.id], col.dateMask);
-          } else if (col.dataType == "int") {
+          } else if (col.dataType === "int") {
             str += this._valueInt(row[col.id]);
           } else {
             str += this._value(row[col.id]); // unknown dataType; so just treat as normal
@@ -61,7 +62,7 @@ class mgCsvWriter {
           str += this._value(row[col.id]);
         }
 
-      } else if (typeof col.defaultValue != "undefined") {
+      } else if (typeof col.defaultValue !== "undefined") {
         str += this._value(col.defaultValue);
       }
 
@@ -94,12 +95,11 @@ class mgCsvWriter {
   _valueDate(value, dateMask) {
     if (typeof value === "undefined" || value === null)
       return "";
-
-    if (Object.prototype.toString.call(value) !== '[object Date]')
+    else if (Object.prototype.toString.call(value) !== '[object Date]')
       return this._value(value);
 
     dateMask = (typeof dateMask === "undefined" || dateMask === null || dateMask === "") ? "isoDateTime" : dateMask;
-    return dateFormat(value, dateMask);
+    return '"' + dateFormat(value, dateMask) + '"';
   }
 
   _value(value) {
@@ -111,7 +111,7 @@ class mgCsvWriter {
   }
 
   _needsQuoted(str) {
-    return str.includes(this.options.delimiter) || str.includes('\n') || str.includes('"');
+    return this.options.quoted || str.includes(this.options.delimiter) || str.includes('\n') || str.includes('"');
   }
 }
 

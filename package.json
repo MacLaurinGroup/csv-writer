@@ -1,7 +1,7 @@
 {
   "name": "mg-csv-writer",
   "private" : false,
-  "version": "0.0.2",
+  "version": "0.0.3",
   "homepage": "https://github.com/MacLaurinGroup/csv-writer",
   "description": "Powerful, lean and flexible csv-writer for node",
   "main": "index.js",
