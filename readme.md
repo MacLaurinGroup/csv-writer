@@ -48,9 +48,9 @@ var stockData = [{
 	}
 ];
 
-const mgCsvWriter = require("mg-csv-writer");
+const CsvFileWriter = require("mg-csv-writer");
 
-const csvOut = new mgCsvWriter({
+const csvOut = new CsvFileWriter({
   outfile: "/tmp/output.csv",
   header: true,
   quoted: false,
