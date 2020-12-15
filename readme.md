@@ -88,5 +88,6 @@ csv.write(stockData2);  // multiple calls will add to the file
 
 ## Updates
 
+* 2020-12-15 Renamed internal class; Updated code standard
 * 2020-02-13 Added quoted attribute
 * 2019-03-08 Initial Release
